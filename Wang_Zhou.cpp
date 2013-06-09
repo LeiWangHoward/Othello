@@ -161,21 +161,31 @@ void Wang_Zhou::reset_square(int row, int col) {
 }
 
 bool alpha_beta_search (Wang_Zhou * b, int cpuval, int humval) {
-	int best_score=-99999;//at the very beginning, best score is negative infinity
-	int min=-99999;
-	int max=99999;
+	int best_score=-9999;//at the very beginning, best score is negative infinity
+	int min=-9999;
+	int max=9999;
 	int max_row=0;
 	int max_col=0;
 	int level = 0;//a counter that used to check how many level we wanna check
+	
+	/*cout<< "******" <<endl 
+	    << level
+	    << endl
+	    <<b->toString()
+	    <<"*******"
+	    <<endl; //test
+	*/
+	//Wang_Zhou *copy = new Wang_Zhou(*b);	
 	for (int i = 1; i < 9; i++)
 	{
 		for (int j = 1; j < 9; j++)
 		{
-			if(b->get_square(i,j)==0){
-				if(b->play_square(i,j,cpuval))
+			Wang_Zhou *copy = new Wang_Zhou(*b);
+			if(copy->get_square(i,j)==0){
+				if(copy->play_square(i,j,cpuval))
 				{
-				  int tmp_best = MinValue(b, min, max, cpuval, humval,++level);
-                		  b->reset_square(i,j);//redo the step
+				  int tmp_best = MinValue(copy, min, max, cpuval, humval,++level);
+                		  //b->reset_square(i,j);//redo the step
 				  if (best_score < tmp_best){
 					best_score=tmp_best;
 					max_row=i;
@@ -186,6 +196,12 @@ bool alpha_beta_search (Wang_Zhou * b, int cpuval, int humval) {
 			}
 		}
 	}
+	/*cout<< "******" <<endl 
+            << level
+            << endl
+            <<b->toString()
+            <<"*******"
+            <<endl;*/ //test
 	if(b->play_square(max_row,max_col,cpuval))
 		return true;
 	cout << "Computer passes." <<endl;
@@ -194,22 +210,25 @@ bool alpha_beta_search (Wang_Zhou * b, int cpuval, int humval) {
 
 int MaxValue(Wang_Zhou * b, int min, int max, int cpuval,int humval, int level){
 	if(b->full_board()||level > 8)//we only search 8 levels
-          return -b->score();
-        int themax = -99999;
+          return (0 - b->score());
+        int themax = -9999;
+	//Wang_Zhou *copy = new Wang_Zhou(*b); 
         for (int i = 1; i < 9; i++)
         {
                 for (int j = 1; j < 9; j++)
                 {
-			if(b->get_square(i,j)==0){
-				if (b->play_square(i,j,cpuval))
+			Wang_Zhou *copy = new Wang_Zhou(*b);
+			if(copy->get_square(i,j)==0){
+				if (copy->play_square(i,j,cpuval))
 				{
-					int tmp=MinValue(b, min, max, cpuval, humval,level+1);
+					int tmp=MinValue(copy, min, max, cpuval, humval,level+1);
 					if(tmp > themax)
 						themax=tmp;
-					b->reset_square(i,j);//redo
-					if (themax >= max) return themax;
-					else if(themax > min)
-						min = themax;
+					//b->reset_square(i,j);//redo
+					if (themax >= max) 
+					  return themax;
+					if(themax > min)
+					  min = themax;
 				}
 				else continue;
 			}
@@ -220,21 +239,25 @@ int MaxValue(Wang_Zhou * b, int min, int max, int cpuval,int humval, int level){
 
 int MinValue( Wang_Zhou * b, int min, int max,int cpuval, int humval, int level){
 	if(b->full_board()||level > 8)//we only search 8 levels
-	  return -b->score();
-	int themin = 99999;
+	  return (0 - b->score());
+	int themin = 9999;
+	//Wang_Zhou *copy = new Wang_Zhou(*b);
+	//cout << level <<endl << copy->toString(); //test
 	for (int i = 1; i < 9; i++)
 	{
 		for (int j = 1; j < 9; j++)
 		{
-			if(b->get_square(i,j)==0){
-				if(b->play_square(i, j, humval))
+			Wang_Zhou *copy = new Wang_Zhou(*b);
+			if(copy->get_square(i,j)==0){
+				if(copy->play_square(i, j, humval))
 				{
-					int tmp_best= MaxValue(b,min,max,cpuval,humval,level+1);
+					int tmp_best= MaxValue(copy,min,max,cpuval,humval,level+1);
 					if(tmp_best< themin)
 						themin=tmp_best;
-					b->reset_square(i,j);//return one step
-					if (themin <= min) return themin;
-					else if(themin < max)
+					//b->reset_square(i,j);//return one step
+					if (themin <= min) 
+					 return themin;
+					if(themin < max)
 					 max = themin;
 				}
 				else continue;
@@ -300,8 +323,10 @@ void play() {
 		cout << "Human wins by " << score << endl;
 	else if(score<0)
 		cout << "Computer wins by " << -score << endl;
-	char a;
-	cin >> a;
+	//char a;
+	//cin >> a;
+	//if (a == 'q')
+	//return 0;
 }
 
 
