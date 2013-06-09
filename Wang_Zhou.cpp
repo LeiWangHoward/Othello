@@ -160,7 +160,16 @@ void Wang_Zhou::reset_square(int row, int col) {
 	squares[row-1][col-1]=0;
 }
 
-bool alpha_beta_search (Wang_Zhou * b, int cpuval, int humval) {
+int Evaluate(Wang_Zhou *b, int cpu)
+{
+	int score;
+	if (cpu == -1) //playing white
+	 score = 0 - b->score();
+	else //playing black
+	 score = b->score();
+	return score;
+}
+bool alpha_beta_search (Wang_Zhou * b, int cpu, int rival) {
 	int best_score=-9999;//at the very beginning, best score is negative infinity
 	int min=-9999;
 	int max=9999;
@@ -182,9 +191,9 @@ bool alpha_beta_search (Wang_Zhou * b, int cpuval, int humval) {
 		{
 			Wang_Zhou *copy = new Wang_Zhou(*b);
 			if(copy->get_square(i,j)==0){
-				if(copy->play_square(i,j,cpuval))
+				if(copy->play_square(i,j,cpu))
 				{
-				  int tmp_best = MinValue(copy, min, max, cpuval, humval,++level);
+				  int tmp_best = MinValue(copy, min, max, cpu, rival,++level);
                 		  //b->reset_square(i,j);//redo the step
 				  if (best_score < tmp_best){
 					best_score=tmp_best;
@@ -202,7 +211,7 @@ bool alpha_beta_search (Wang_Zhou * b, int cpuval, int humval) {
             <<b->toString()
             <<"*******"
             <<endl;*/ //test
-	if(b->play_square(max_row,max_col,cpuval))
+	if(b->play_square(max_row,max_col,cpu))
 		return true;
 	cout << "Computer passes." <<endl;
 	return false;
@@ -210,7 +219,7 @@ bool alpha_beta_search (Wang_Zhou * b, int cpuval, int humval) {
 
 int MaxValue(Wang_Zhou * b, int min, int max, int cpuval,int humval, int level){
 	if(b->full_board()||level > 8)//we only search 8 levels
-          return (0 - b->score());
+          return Evaluate(b,cpuval);
         int themax = -9999;
 	//Wang_Zhou *copy = new Wang_Zhou(*b); 
         for (int i = 1; i < 9; i++)
@@ -239,7 +248,7 @@ int MaxValue(Wang_Zhou * b, int min, int max, int cpuval,int humval, int level){
 
 int MinValue( Wang_Zhou * b, int min, int max,int cpuval, int humval, int level){
 	if(b->full_board()||level > 8)//we only search 8 levels
-	  return (0 - b->score());
+	  return Evaluate(b,cpuval);
 	int themin = 9999;
 	//Wang_Zhou *copy = new Wang_Zhou(*b);
 	//cout << level <<endl << copy->toString(); //test
@@ -274,6 +283,21 @@ void play() {
 
 	cout << b->toString();
 	int consecutivePasses = 0;
+	char which_first=0;
+	cout<<endl<<"Please decide which one shall play first('h':human, 'c':computer)"<<endl;
+	cin >> which_first;
+	while(which_first!='h' &&which_first!='c')
+	{
+	 cout<<"Illegal input, please choose 'c' or 'h'"<<endl;
+	 cin >> which_first;
+	}
+	if (which_first == 'c')
+	{
+	 humanPlayer = -1;
+	 cpuPlayer = 1;
+	 alpha_beta_search(b,cpuPlayer,humanPlayer);
+	 cout<<b->toString();
+	}
 	while(!b->full_board() && consecutivePasses<2) {
 		int row, col;
 		//check if player must pass:
@@ -320,9 +344,9 @@ void play() {
 	if(score==0)
 		cout << "Tie game." << endl;
 	else if(score>0)
-		cout << "Human wins by " << score << endl;
+		cout << "Black wins by " << score << endl;
 	else if(score<0)
-		cout << "Computer wins by " << -score << endl;
+		cout << "White wins by " << -score << endl;
 	//char a;
 	//cin >> a;
 	//if (a == 'q')

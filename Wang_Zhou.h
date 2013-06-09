@@ -21,3 +21,4 @@ bool make_simple_cpu_move(Wang_Zhou * b, int cpuval);
 bool alpha_beta_search(Wang_Zhou*, int, int);
 int MinValue(Wang_Zhou*, int, int, int, int, int);
 int MaxValue(Wang_Zhou*, int, int, int, int, int);
+int Evaluate(Wang_Zhou*, int);
