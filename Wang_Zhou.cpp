@@ -6,9 +6,9 @@
 #include <exception>
 #include <string>
 #include <cctype>
-
+#include "Wang_Zhou.h"
 using namespace std;
-
+/*
 class Wang_Zhou {
 	int squares[8][8];
 
@@ -23,19 +23,19 @@ public:
 	int score();
 	bool full_board();
 	bool has_valid_move(int);
-};
+};*/
 
 //initialize the board
 Wang_Zhou::Wang_Zhou() {
 	for(int i=0; i<8;i++)
 		for(int j=0; j<8; j++)
 			squares[i][j] = 0;
-	squares[3][3]=-1;
+	squares[3][3]=-1;//white
 	squares[4][4]=-1;
-	squares[3][4]=1;
+	squares[3][4]=1;//black
 	squares[4][3]=1;
 }
-
+//print out board for check
 string Wang_Zhou::toString() {
 	stringstream s;
 	char cforvalplusone[] = {'W', '_', 'B'};
@@ -156,6 +156,94 @@ bool make_simple_cpu_move(Wang_Zhou * b, int cpuval) {
 	return false;
 }
 
+void Wang_Zhou::reset_square(int row, int col) {
+	squares[row-1][col-1]=0;
+}
+
+bool alpha_beta_search (Wang_Zhou * b, int cpuval, int humval) {
+	int best_score=-99999;//at the very beginning, best score is negative infinity
+	int min=-99999;
+	int max=99999;
+	int max_row=0;
+	int max_col=0;
+	int level = 0;//a counter that used to check how many level we wanna check
+	for (int i = 1; i < 9; i++)
+	{
+		for (int j = 1; j < 9; j++)
+		{
+			if(b->get_square(i,j)==0){
+				if(b->play_square(i,j,cpuval))
+				{
+				  int tmp_best = MinValue(b, min, max, cpuval, humval,++level);
+                		  b->reset_square(i,j);//redo the step
+				  if (best_score < tmp_best){
+					best_score=tmp_best;
+					max_row=i;
+					max_col=j;
+				  }
+				}
+				else continue;
+			}
+		}
+	}
+	if(b->play_square(max_row,max_col,cpuval))
+		return true;
+	cout << "Computer passes." <<endl;
+	return false;
+}
+
+int MaxValue(Wang_Zhou * b, int min, int max, int cpuval,int humval, int level){
+	if(b->full_board()||level > 8)//we only search 8 levels
+          return -b->score();
+        int themax = -99999;
+        for (int i = 1; i < 9; i++)
+        {
+                for (int j = 1; j < 9; j++)
+                {
+			if(b->get_square(i,j)==0){
+				if (b->play_square(i,j,cpuval))
+				{
+					int tmp=MinValue(b, min, max, cpuval, humval,level+1);
+					if(tmp > themax)
+						themax=tmp;
+					b->reset_square(i,j);//redo
+					if (themax >= max) return themax;
+					else if(themax > min)
+						min = themax;
+				}
+				else continue;
+			}
+		}
+	}
+	return themax;
+}
+
+int MinValue( Wang_Zhou * b, int min, int max,int cpuval, int humval, int level){
+	if(b->full_board()||level > 8)//we only search 8 levels
+	  return -b->score();
+	int themin = 99999;
+	for (int i = 1; i < 9; i++)
+	{
+		for (int j = 1; j < 9; j++)
+		{
+			if(b->get_square(i,j)==0){
+				if(b->play_square(i, j, humval))
+				{
+					int tmp_best= MaxValue(b,min,max,cpuval,humval,level+1);
+					if(tmp_best< themin)
+						themin=tmp_best;
+					b->reset_square(i,j);//return one step
+					if (themin <= min) return themin;
+					else if(themin < max)
+					 max = themin;
+				}
+				else continue;
+			}
+		}
+	}
+	return themin;
+}
+
 void play() {
 	Wang_Zhou * b = new Wang_Zhou();
 	int humanPlayer = 1;
@@ -198,7 +286,7 @@ void play() {
 			break;
 		else {
 			cout << b->toString() << "..." << endl;
-			if(make_simple_cpu_move(b, cpuPlayer))
+			if(alpha_beta_search(b, cpuPlayer, humanPlayer))//(make_simple_cpu_move(b, cpuPlayer))
 				consecutivePasses=0;
 			else
 				consecutivePasses++;
@@ -215,6 +303,7 @@ void play() {
 	char a;
 	cin >> a;
 }
+
 
 int main(int argc, char * argv[])
 {
