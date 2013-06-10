@@ -4,7 +4,8 @@ using namespace::std;
 
 class Wang_Zhou {
         int squares[8][8];
-
+	int my_color;
+	int pass;
 public:
         Wang_Zhou();
         string toString();
@@ -21,7 +22,7 @@ public:
         bool has_valid_move(int);
 };
 bool make_simple_cpu_move(Wang_Zhou * b, int cpuval);
-bool alpha_beta_search(Wang_Zhou*, int, int);
+bool alpha_beta_search(Wang_Zhou*, int, int, int&, int&);
 int MinValue(Wang_Zhou*, int, int, int, int, int);
 int MaxValue(Wang_Zhou*, int, int, int, int, int);
 int Evaluate(Wang_Zhou*, int);

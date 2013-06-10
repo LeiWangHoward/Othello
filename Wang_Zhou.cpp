@@ -19,6 +19,8 @@ Wang_Zhou::Wang_Zhou() {
 	squares[4][4]=-1;
 	squares[3][4]=1;//black
 	squares[4][3]=1;
+	my_color = -1;//default, we play white
+	pass = 0;
 }
 //print out board for check
 string Wang_Zhou::toString() {
@@ -115,7 +117,20 @@ bool Wang_Zhou::play_square(int row, int col, int val) {
 //executes move if it is valid. Returns false and does not update board otherwise
 //Makes computer make its move and returns the computer's move in row, and col
 bool Wang_Zhou::play_square(int &row, int &col){
-    return true;
+    	if((row ==0) && (col == 0))
+	{
+		this->my_color = 1;//we play black
+	}
+	else if ((row == -1) && (col == -1))
+	{
+		++this->pass;
+	}
+	else
+	{
+		this->play_square(row, col, 0-this->my_color); 
+	}
+	if (alpha_beta_search (this, this->my_color, 0-this->my_color, row, col))
+	 pass = 0;
 }
 
 bool Wang_Zhou::full_board() {
@@ -200,9 +215,9 @@ int Evaluate(Wang_Zhou *b, int cpu)
 	corner_value = 100*(cpu_corner - rival_corner)/(cpu_corner + rival_corner);
 	else corner_value =0;
 	//double stability = 100*abs(b->score()) / b->total_coins();
-	return (int)actual_mobility + (int) corner_value;
+	return (int)(actual_mobility + corner_value);
 }
-bool alpha_beta_search (Wang_Zhou * b, int cpu, int rival) {
+bool alpha_beta_search (Wang_Zhou * b, int cpu, int rival, int &row, int &col) {
 	int best_score=-9999;//at the very beginning, best score is negative infinity
 	int min=-9999;
 	int max=9999;
@@ -245,8 +260,14 @@ bool alpha_beta_search (Wang_Zhou * b, int cpu, int rival) {
             <<"*******"
             <<endl;*/ //test
 	if(b->play_square(max_row,max_col,cpu))
+	{
+		row = max_row;
+		col = max_col;
 		return true;
+	}
 	cout << "Computer passes." <<endl;
+	row = -1;
+	col = -1;
 	return false;
 }
 
@@ -314,7 +335,8 @@ void play() {
 	Wang_Zhou * b = new Wang_Zhou();
 	int humanPlayer = 1;
 	int cpuPlayer = -1;
-
+	int r;
+	int c;
 	cout << b->toString();
 	int consecutivePasses = 0;
 	char which_first=0;
@@ -329,7 +351,7 @@ void play() {
 	{
 	 humanPlayer = -1;
 	 cpuPlayer = 1;
-	 alpha_beta_search(b,cpuPlayer,humanPlayer);
+	 alpha_beta_search(b,cpuPlayer,humanPlayer,r,c);
 	 cout<<b->toString();
 	}
 	while(!b->full_board() && consecutivePasses<2) {
@@ -340,8 +362,9 @@ void play() {
 			consecutivePasses++;
 		}
 		else {
-		make_simple_cpu_move(b, humanPlayer);
-		/*
+		//make_simple_cpu_move(b, humanPlayer);
+		//alpha_beta_search(b,humanPlayer, cpuPlayer,r,c);
+			
             		consecutivePasses = 0;
 			cout << "Your move row (1-8): ";
 			cin >> row;
@@ -362,14 +385,14 @@ void play() {
 			if(!b->play_square(row, col, humanPlayer)) {
                 		cout << "Illegal move." << endl;
 				continue;
-            		}    */    
+            		}      
 		}
 		//move for computer:
 		if(b->full_board())
 			break;
 		else {
 			cout << b->toString() << "..." << endl;
-			if(alpha_beta_search(b, cpuPlayer, humanPlayer))//(make_simple_cpu_move(b, cpuPlayer))
+			if(alpha_beta_search(b, cpuPlayer, humanPlayer,r,c))//(make_simple_cpu_move(b, cpuPlayer))
 				consecutivePasses=0;
 			else
 				consecutivePasses++;
