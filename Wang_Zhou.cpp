@@ -5,25 +5,10 @@
 #include <sstream>
 #include <exception>
 #include <string>
+#include <stdlib.h>
 #include <cctype>
 #include "Wang_Zhou.h"
 using namespace std;
-/*
-class Wang_Zhou {
-	int squares[8][8];
-
-public:
-	Wang_Zhou();
-	string toString();
-	bool play_square(int, int, int);
-	bool play_square(int&, int&);
-	bool move_is_valid(int, int, int);
-	bool check_or_flip_path(int, int, int, int, int, bool);
-	int get_square(int, int);
-	int score();
-	bool full_board();
-	bool has_valid_move(int);
-};*/
 
 //initialize the board
 Wang_Zhou::Wang_Zhou() {
@@ -57,7 +42,15 @@ bool Wang_Zhou::has_valid_move(int val) {
 				return true;
 	return false;
 }
-
+//return number of valid moves
+int Wang_Zhou::count_valid_moves(int val) {
+	int count=0;
+	for(int i=0; i<8;i++)
+                for(int j=0; j<8; j++)
+                        if(move_is_valid(i+1, j+1, val))
+                                ++count;
+	return count;
+}
 //r and c zero indexed here
 //checks whether path in direction rinc, cinc results in flips for val
 //will actually flip the pieces along path when doFlips is true
@@ -142,6 +135,13 @@ int Wang_Zhou::score() {
 	return sum;
 }
 
+int Wang_Zhou::total_coins(){
+	int sum =0;
+        for(int i=0; i<8;i++)
+                for(int j=0; j<8; j++)
+                        sum+=abs(squares[i][j]);
+        return sum;
+}
 int Wang_Zhou::get_square(int row, int col) {
 	return squares[row-1][col-1];
 }
@@ -156,18 +156,51 @@ bool make_simple_cpu_move(Wang_Zhou * b, int cpuval) {
 	return false;
 }
 
+/*
 void Wang_Zhou::reset_square(int row, int col) {
 	squares[row-1][col-1]=0;
-}
+}*/
 
 int Evaluate(Wang_Zhou *b, int cpu)
 {
-	int score;
-	if (cpu == -1) //playing white
-	 score = 0 - b->score();
-	else //playing black
-	 score = b->score();
-	return score;
+	int rival_color = 0 - cpu;//if we play black(1), rival will play white(-1)
+	//1st, we handle mobility
+	double rival_move = b->count_valid_moves(rival_color);
+	double cpu_move = b->count_valid_moves(cpu);
+	double actual_mobility =0.0;
+	if((rival_move + cpu_move)!=0)
+	actual_mobility =100 * (cpu_move - rival_move) / (cpu_move + rival_move); 
+	//2nd, we handle corner
+	double corner_value = 0.0;
+	double cpu_corner = 0.0;
+	double rival_corner = 0.0;
+	//upper left
+	if (b->get_square(1,1)==cpu)
+		cpu_corner +=cpu;
+	else if (b->get_square(1,1)==rival_color)
+		rival_corner +=rival_color;
+	//lower left
+	if (b->get_square(8,1)==cpu)
+                cpu_corner +=cpu;
+        else if (b->get_square(8,1)==rival_color)
+		rival_corner +=rival_color;	
+	//upper right
+	if (b->get_square(1,8)==cpu)
+                cpu_corner +=cpu;
+        else if (b->get_square(1,8)==rival_color)
+		 rival_corner +=rival_color;
+	//lower right
+	if (b->get_square(8,8)==cpu)
+                cpu_corner +=cpu;
+        else if (b->get_square(8,8)==rival_color)
+		rival_corner +=rival_color;
+	cpu_corner = abs(cpu_corner);
+	rival_corner = abs(rival_corner);
+	if ((cpu_corner+rival_corner)!= 0)
+	corner_value = 100*(cpu_corner - rival_corner)/(cpu_corner + rival_corner);
+	else corner_value =0;
+	//double stability = 100*abs(b->score()) / b->total_coins();
+	return (int)actual_mobility + (int) corner_value;
 }
 bool alpha_beta_search (Wang_Zhou * b, int cpu, int rival) {
 	int best_score=-9999;//at the very beginning, best score is negative infinity
@@ -218,7 +251,7 @@ bool alpha_beta_search (Wang_Zhou * b, int cpu, int rival) {
 }
 
 int MaxValue(Wang_Zhou * b, int min, int max, int cpuval,int humval, int level){
-	if(b->full_board()||level > 8)//we only search 8 levels
+	if(b->full_board()||level >6)//> 8)//we only search 8 levels
           return Evaluate(b,cpuval);
         int themax = -9999;
 	//Wang_Zhou *copy = new Wang_Zhou(*b); 
@@ -236,7 +269,7 @@ int MaxValue(Wang_Zhou * b, int min, int max, int cpuval,int humval, int level){
 					//b->reset_square(i,j);//redo
 					if (themax >= max) 
 					  return themax;
-					if(themax > min)
+					else if(themax > min)
 					  min = themax;
 				}
 				else continue;
@@ -247,7 +280,7 @@ int MaxValue(Wang_Zhou * b, int min, int max, int cpuval,int humval, int level){
 }
 
 int MinValue( Wang_Zhou * b, int min, int max,int cpuval, int humval, int level){
-	if(b->full_board()||level > 8)//we only search 8 levels
+	if(b->full_board()||level >6)//> 8)//we only search 8 levels
 	  return Evaluate(b,cpuval);
 	int themin = 9999;
 	//Wang_Zhou *copy = new Wang_Zhou(*b);
@@ -266,7 +299,7 @@ int MinValue( Wang_Zhou * b, int min, int max,int cpuval, int humval, int level)
 					//b->reset_square(i,j);//return one step
 					if (themin <= min) 
 					 return themin;
-					if(themin < max)
+					else if(themin < max)
 					 max = themin;
 				}
 				else continue;
@@ -275,6 +308,7 @@ int MinValue( Wang_Zhou * b, int min, int max,int cpuval, int humval, int level)
 	}
 	return themin;
 }
+
 
 void play() {
 	Wang_Zhou * b = new Wang_Zhou();
@@ -306,6 +340,8 @@ void play() {
 			consecutivePasses++;
 		}
 		else {
+		make_simple_cpu_move(b, humanPlayer);
+		/*
             		consecutivePasses = 0;
 			cout << "Your move row (1-8): ";
 			cin >> row;
@@ -326,7 +362,7 @@ void play() {
 			if(!b->play_square(row, col, humanPlayer)) {
                 		cout << "Illegal move." << endl;
 				continue;
-            		}        
+            		}    */    
 		}
 		//move for computer:
 		if(b->full_board())
