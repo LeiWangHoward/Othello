@@ -12,7 +12,7 @@ public:
         bool play_square(int, int, int);
         bool play_square(int&, int&);
 	//void reset_square(int, int);
-	int count_valid_moves(int); 
+	int count_valid_moves(int);
         bool move_is_valid(int, int, int);
         bool check_or_flip_path(int, int, int, int, int, bool);
         int get_square(int, int);
