@@ -21,6 +21,7 @@ public:
         bool full_board();
         bool has_valid_move(int);
 };
+
 bool make_simple_cpu_move(Wang_Zhou * b, int cpuval);
 bool alpha_beta_search(Wang_Zhou*, int, int, int&, int&);
 int MinValue(Wang_Zhou*, int, int, int, int, int);
